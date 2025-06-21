@@ -1,0 +1,259 @@
+Nota: Ejecutar consultas en cualquier SQL Server
+--- PRACTICA 3--------------------
+
+-----Fracmentacion de nodos por entidades---------------------------------------------------------
+--Nodo A "Norte" Sql Server
+use covidHistorico
+go
+-- Division tablas y traspaso
+SELECT * INTO datoscovid_norte
+FROM covidHistorico.dbo.datoscovid
+WHERE ENTIDAD_RES IN (02,03, 05, 08, 10, 26, 25, 19);
+-- Visualizacion fragmento
+SELECT * FROM datoscovid_norte
+
+--Nodo B "Centro_Norte" Sql Server
+
+Use covidHistorico
+go
+-- Division tablas y traspaso
+SELECT * INTO datoscovid_centro_norte
+FROM covidHistorico.dbo.datoscovid
+WHERE ENTIDAD_RES IN (01, 32, 24, 11, 22, 14, 18, 06);
+-- Visualizacion fragmento
+SELECT * FROM datoscovid_centro_norte;
+
+
+--Nodo C "Centro_Sur" Sql Server
+
+Use covidHistorico;
+go
+--Traspasar y dividir las tablas
+SELECT * INTO datoscovid_centro_sur
+FROM covidHistorico.dbo.datoscovid
+WHERE ENTIDAD_RES IN (09,15,17,21,29,13,16,12);
+--Visualizar la fragmentacion
+SELECT * FROM datoscovid_centro_sur
+    
+--Nodo D "Sur" MySQL
+Use covidHistorico;
+go
+-- Division de tablas y traspaso
+INSERT INTO OPENQUERY(NODO_MYSQL, 'SELECT * FROM covidhistorico.datoscovid')
+SELECT * FROM datoscovid WHERE entidad_res IN (30, 20, 07, 27, 04, 31, 23, 28) ;
+-- Consulta de fragmento
+SELECT * into datos_sureste
+FROM OPENQUERY(NODO_MYSQL, 'SELECT * FROM covidhistorico.datoscovid')
+
+
+
+--- Consulta 3 ------------------------------
+SELECT 
+    morbilidad, 
+    SUM(casos) AS casos_totales, 
+    SUM(poblacion) AS poblacion_total, 
+    (SUM(casos) * 100.0 / SUM(poblacion)) AS porcentaje
+FROM (
+    SELECT 
+        'Diabetes' AS morbilidad,
+        SUM(CASE WHEN DIABETES = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END) AS casos,
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END) AS poblacion
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    UNION ALL
+    SELECT 
+        'Obesidad' AS morbilidad,
+        SUM(CASE WHEN OBESIDAD = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    UNION ALL
+    SELECT 
+        'Hipertensión' AS morbilidad,
+        SUM(CASE WHEN HIPERTENSION = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    UNION ALL
+    SELECT 
+        'Diabetes' AS morbilidad,
+        SUM(CASE WHEN DIABETES = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [25.49.245.229].[covidHistorico].[dbo].[datoscovid_centro_sur]
+    UNION ALL
+    SELECT 
+        'Obesidad' AS morbilidad,
+        SUM(CASE WHEN OBESIDAD = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [25.49.245.229].[covidHistorico].[dbo].[datoscovid_centro_sur]
+    UNION ALL
+    SELECT 
+        'Hipertensión' AS morbilidad,
+        SUM(CASE WHEN HIPERTENSION = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [25.49.245.229].[covidHistorico].[dbo].[datoscovid_centro_sur]
+    UNION ALL
+    SELECT 
+        'Diabetes' AS morbilidad,
+        SUM(CASE WHEN DIABETES = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    UNION ALL
+    SELECT 
+        'Obesidad' AS morbilidad,
+        SUM(CASE WHEN OBESIDAD = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    UNION ALL
+    SELECT 
+        'Hipertensión' AS morbilidad,
+        SUM(CASE WHEN HIPERTENSION = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    UNION ALL
+    SELECT 
+        'Diabetes' AS morbilidad,
+        SUM(CASE WHEN DIABETES = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM OPENQUERY([NODO_MYSQL], 'SELECT * FROM covidhistorico.datoscovid')
+    UNION ALL
+    SELECT 
+        'Obesidad' AS morbilidad,
+        SUM(CASE WHEN OBESIDAD = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM OPENQUERY([NODO_MYSQL], 'SELECT * FROM covidhistorico.datoscovid')
+    UNION ALL
+    SELECT 
+        'Hipertensión' AS morbilidad,
+        SUM(CASE WHEN HIPERTENSION = 1 AND CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END),
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END)
+    FROM OPENQUERY([NODO_MYSQL], 'SELECT * FROM covidhistorico.datoscovid')
+) AS combined_data
+GROUP BY morbilidad;
+
+--------------------Consulta 4  Modificada -----------------------------------------------------------------------
+--Municipios que no tengan casos confirmados de hipertensión, obesidad, diabetes y tabaquismo.
+
+SELECT DISTINCT MUNICIPIO_RES INTO #temporal_municipios
+FROM (
+    SELECT MUNICIPIO_RES 
+    FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    WHERE CLASIFICACION_FINAL = 3 AND (DIABETES = 1 OR OBESIDAD = 1 OR TABAQUISMO = 1)
+    UNION
+    SELECT MUNICIPIO_RES 
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    WHERE CLASIFICACION_FINAL = 3 AND (DIABETES = 1 OR OBESIDAD = 1 OR TABAQUISMO = 1)
+    UNION    
+    SELECT MUNICIPIO_RES 
+    FROM covidHistorico.dbo.[datoscovid_centro_sur]
+    WHERE CLASIFICACION_FINAL = 3 AND (DIABETES = 1 OR OBESIDAD = 1 OR TABAQUISMO = 1)    
+    UNION    
+    SELECT MUNICIPIO_RES 
+    FROM OPENQUERY([MYSQLYUVIA], '
+        SELECT MUNICIPIO_RES 
+        FROM datoscovid 
+        WHERE CLASIFICACION_FINAL = 3
+        AND (DIABETES = 1 OR OBESIDAD = 1 OR TABAQUISMO = 1)
+    ')
+) AS datos;
+
+SELECT DISTINCT MUNICIPIO_RES
+FROM (
+    SELECT MUNICIPIO_RES FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    UNION
+    SELECT MUNICIPIO_RES FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    UNION
+    SELECT MUNICIPIO_RES FROM covidHistorico.dbo.[datoscovid_centro_sur]
+    UNION
+    SELECT MUNICIPIO_RES FROM OPENQUERY([MYSQLYUVIA], 'SELECT MUNICIPIO_RES FROM datoscovid')
+) AS todos_municipios
+WHERE MUNICIPIO_RES NOT IN (SELECT MUNICIPIO_RES FROM #temporal_municipios)
+ORDER BY MUNICIPIO_RES;
+
+DROP TABLE #temporal_municipios;
+
+-------Consulta 5-----------------------------------------------------
+--Estados con más casos recuperados
+SELECT ENTIDAD_UM, COUNT(*) AS Casos_recuperados
+FROM (
+    -- Nodo centro_norte (local)
+    SELECT ENTIDAD_UM
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    WHERE NEUMONIA = 1 AND FECHA_DEF = '9999-99-99'
+    UNION ALL
+    -- Nodo norte
+    SELECT ENTIDAD_UM
+    FROM [YUVIA].[covidHistorico].[dbo].[datoscovid_norte]
+        WHERE NEUMONIA = 1 AND FECHA_DEF = '9999-99-99 '
+    UNION ALL
+	-- Nodo centro_sur
+    SELECT ENTIDAD_UM
+    FROM [25.49.245.229\SQLEXPRESS].[covidHistorico].[dbo].[datoscovid_centro_sur]
+    WHERE NEUMONIA = 1 AND FECHA_DEF = '9999-99-99'
+    UNION ALL
+    -- Nodo CENTRO MYSQLYUVIA
+    SELECT ENTIDAD_UM
+    FROM OPENQUERY(MYSQLYUVIA, '
+        SELECT ENTIDAD_UM
+        FROM covidhistorico.datoscovid
+        WHERE NEUMONIA = 1 AND FECHA_DEF = ''9999-99-99''
+    ')
+) AS datos_unidos
+GROUP BY ENTIDAD_UM
+ORDER BY Casos_recuperados DESC;
+
+------------------------------Consulta 7 Modificada ---------------------------------------------------
+SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+INTO #temporal_casos
+FROM (
+   
+    SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+    FROM [YUVIA\ABIGAIL].[covidHistorico].[dbo].[datoscovid_norte]
+    WHERE CLASIFICACION_FINAL IN (3, 6) AND YEAR(FECHA_INGRESO) IN (2020, 2021)
+    
+    UNION ALL
+
+    SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+    FROM [PC-MONZEE\SQLEXPRESS03].[covidHistorico].[dbo].[datoscovid_centro_norte]
+    WHERE CLASIFICACION_FINAL IN (3, 6) AND YEAR(FECHA_INGRESO) IN (2020, 2021)
+
+    UNION ALL
+
+   
+    SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+    FROM [25.49.245.229].[covidHistorico].[dbo].[datoscovid_centro_sur]
+    WHERE CLASIFICACION_FINAL IN (3, 6) AND YEAR(FECHA_INGRESO) IN (2020, 2021)
+
+    UNION ALL
+
+    SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+    FROM OPENQUERY([NODO_MYSQL], '
+        SELECT ENTIDAD_UM, FECHA_INGRESO, CLASIFICACION_FINAL
+        FROM datoscovid
+        WHERE CLASIFICACION_FINAL IN (3, 6)
+        AND YEAR(FECHA_INGRESO) IN (2020, 2021)
+    ')
+) AS datos_combinados;
+
+WITH casos AS (
+    SELECT 
+        ENTIDAD_UM AS entidad,
+        YEAR(FECHA_INGRESO) AS año,
+        MONTH(FECHA_INGRESO) AS mes,
+        SUM(CASE WHEN CLASIFICACION_FINAL = 3 THEN 1 ELSE 0 END) AS casos_confirmados,
+        SUM(CASE WHEN CLASIFICACION_FINAL = 6 THEN 1 ELSE 0 END) AS casos_sospechosos
+    FROM #temporal_casos
+    GROUP BY ENTIDAD_UM, YEAR(FECHA_INGRESO), MONTH(FECHA_INGRESO)
+)
+
+SELECT c.entidad, c.año, c.mes, c.casos_confirmados, c.casos_sospechosos
+FROM casos c
+JOIN (
+    SELECT entidad, año, MAX(casos_confirmados + casos_sospechosos) AS m_casos
+    FROM casos
+    GROUP BY entidad, año
+) maximos
+ON c.entidad = maximos.entidad
+AND c.año = maximos.año
+AND (c.casos_confirmados + c.casos_sospechosos) = maximos.m_casos
+ORDER BY c.entidad, c.año;
+
+DROP TABLE #temporal_casos;
+
